@@ -7,4 +7,6 @@
 void passoBubbleSort(std::vector<int>& vetor, std::vector<bool>& ordenado, int tamanho, int& i, int& j, int& comp_1, int& comp_2, bool& concluido);
 void passoSelectionSort(std::vector<int>& vetor, std::vector<bool>& ordenado, int tamanho, int& i, int& j, int& min_idx, int& comp_1, int& comp_2, bool& concluido);
 
+void passoInsertionSort(std::vector<int>& vetor, std::vector<bool>& ordenado, int tamanho, int& i, int& j, int& chave, bool& pegar_chave, bool& concluido, bool& simulacao_ativa);
+
 #endif

@@ -4,19 +4,16 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
-
-// IMPORTANTE: Inclui o cabeçalho com as funções que criamos nos outros arquivos
+#include <algorithm> 
 #include "algoritmos.h"
 
 #define TAMANHO_VETOR 40
 #define VALOR_MAXIMO 50
 #define VELOCIDADE_MS 20
 
-// Estados do Sistema (Menu ou Representações Ativas)
-enum EstadoSistema { ESTADO_MENU, ESTADO_BUBBLE, ESTADO_SELECTION };
+enum EstadoSistema { ESTADO_MENU, ESTADO_BUBBLE, ESTADO_SELECTION, ESTADO_INSERTION };
 EstadoSistema estado_atual = ESTADO_MENU;
 
-// Variáveis Globais de Estado do Vetor
 std::vector<int> vetor(TAMANHO_VETOR);
 std::vector<bool> ordenado(TAMANHO_VETOR, false);
 
@@ -24,24 +21,105 @@ int cenario_atual = 1;
 bool simulacao_ativa = false; 
 bool concluido = false;
 
-// Variáveis de controle interno dos algoritmos (FSM) que os outros arquivos usam
 int i_bubble = 0, j_bubble = 0;
 int i_select = 0, j_select = 0, min_idx = 0;
+int i_insert = 1, j_insert = 0, chave_insert = 0;
+bool pegar_chave = true;
+
 int comp_1 = -1, comp_2 = -1;
 
-// Variáveis de Câmera e Resolução da Janela
 float camera_angulo_X = 0.0f;
 float camera_angulo_Y = 5.0f;
 int largura_janela = 1024;
 int altura_janela = 768;
 
-// Configuração de Textura Procedimental Matemática
 #define TEXTURA_LARGURA 64
 #define TEXTURA_ALTURA 64
 GLubyte imagem_textura[TEXTURA_ALTURA][TEXTURA_LARGURA][4];
 GLuint id_textura;
 
-// Aloca os valores aleatórios iniciais e zera os ponteiros de controle
+
+void passoBubbleSort() {
+    if (i_bubble < TAMANHO_VETOR - 1) {
+        if (j_bubble < TAMANHO_VETOR - i_bubble - 1) {
+            comp_1 = j_bubble;
+            comp_2 = j_bubble + 1;
+
+            if (vetor[j_bubble] > vetor[j_bubble + 1]) {
+                std::swap(vetor[j_bubble], vetor[j_bubble + 1]);
+            }
+            j_bubble++; 
+        } else {
+            ordenado[TAMANHO_VETOR - i_bubble - 1] = true;
+            j_bubble = 0;  
+            i_bubble++;    
+        }
+    } else {
+        ordenado[0] = true;
+        comp_1 = -1; comp_2 = -1;
+        concluido = true; 
+        simulacao_ativa = false;
+    }
+}
+
+void passoSelectionSort() {
+    if (i_select < TAMANHO_VETOR - 1) {
+        if (j_select == 0) {
+            min_idx = i_select;
+            j_select = i_select + 1;
+        }
+
+        if (j_select < TAMANHO_VETOR) {
+            comp_1 = j_select;
+            comp_2 = min_idx;
+
+            if (vetor[j_select] < vetor[min_idx]) {
+                min_idx = j_select; 
+            }
+            j_select++; 
+        } else {
+            if (min_idx != i_select) {
+                std::swap(vetor[i_select], vetor[min_idx]);
+            }
+            ordenado[i_select] = true; 
+            i_select++;                
+            j_select = 0;              
+        }
+    } else {
+        ordenado[TAMANHO_VETOR - 1] = true;
+        comp_1 = -1; comp_2 = -1;
+        concluido = true; 
+        simulacao_ativa = false;
+    }
+}
+
+void passoInsertionSort() {
+    if (i_insert < TAMANHO_VETOR) {
+        if (pegar_chave) {
+            chave_insert = vetor[i_insert];
+            j_insert = i_insert - 1;
+            pegar_chave = false;
+        }
+
+        if (j_insert >= 0 && vetor[j_insert] > chave_insert) {
+            comp_1 = j_insert;
+            comp_2 = j_insert + 1;
+            vetor[j_insert + 1] = vetor[j_insert];
+            j_insert--;
+        } else {
+            vetor[j_insert + 1] = chave_insert;
+            ordenado[i_insert] = true; 
+            i_insert++;
+            pegar_chave = true;
+        }
+    } else {
+        for(int k = 0; k < TAMANHO_VETOR; k++) ordenado[k] = true;
+        comp_1 = -1; comp_2 = -1;
+        concluido = true;
+        simulacao_ativa = false;
+    }
+}
+
 void resetarVetorEDados() {
     for (int i = 0; i < TAMANHO_VETOR; i++) {
         vetor[i] = (rand() % VALOR_MAXIMO) + 1;
@@ -49,9 +127,10 @@ void resetarVetorEDados() {
     }
     i_bubble = 0; j_bubble = 0;
     i_select = 0; j_select = 0; min_idx = 0;
+    i_insert = 1; j_insert = 0; pegar_chave = true;
     comp_1 = -1;  comp_2 = -1;
     concluido = false;
-    simulacao_ativa = false; // Começa sempre parado!
+    simulacao_ativa = false; // Começa sempre estático (parado)
 }
 
 void gerarTexturaProcedimental() {
@@ -88,7 +167,6 @@ void configurarIluminacao() {
     glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
 }
 
-// Renderizador de Strings em 2D sobreposto à cena 3D (HUD)
 void renderizarTextoHUD(float x, float y, const char* texto, void* fonte) {
     glDisable(GL_LIGHTING);
     glMatrixMode(GL_PROJECTION);
@@ -112,60 +190,68 @@ void renderizarTextoHUD(float x, float y, const char* texto, void* fonte) {
     glEnable(GL_LIGHTING);
 }
 
-// Interface gráfica tridimensional do Menu Principal
 void desenharMenuPrincipal() {
     glColor3f(1.0f, 1.0f, 1.0f);
-    renderizarTextoHUD(-0.35f, 0.6f, "MOTOR DE ORDENACAO", GLUT_BITMAP_TIMES_ROMAN_24);
+    renderizarTextoHUD(-0.35f, 0.6f, "Modelo de Ordenacao", GLUT_BITMAP_TIMES_ROMAN_24);
     renderizarTextoHUD(-0.22f, 0.45f, "Selecione a Representacao:", GLUT_BITMAP_HELVETICA_18);
 
     gluLookAt(0.0f, 0.0f, 8.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    // Renderiza Botão 3D 1 (Bubble Sort)
+    // Botão 3D 1: Bubble Sort
     glPushMatrix();
-        glTranslatef(0.0f, 0.5f, 0.0f);
-        glScalef(4.0f, 0.8f, 0.5f);
+        glTranslatef(0.0f, 0.8f, 0.0f);
+        glScalef(4.0f, 0.7f, 0.5f);
         glColor3f(0.2f, 0.4f, 0.7f);
         glutSolidCube(1.0f);
     glPopMatrix();
-    renderizarTextoHUD(-0.11f, 0.1f, "1. BUBBLE SORT", GLUT_BITMAP_HELVETICA_12);
+    renderizarTextoHUD(-0.11f, 0.17f, "1. BUBBLE SORT", GLUT_BITMAP_HELVETICA_12);
 
-    // Renderiza Botão 3D 2 (Selection Sort)
+    // Botão 3D 2: Selection Sort
     glPushMatrix();
-        glTranslatef(0.0f, -1.0f, 0.0f);
-        glScalef(4.0f, 0.8f, 0.5f);
+        glTranslatef(0.0f, -0.4f, 0.0f);
+        glScalef(4.0f, 0.7f, 0.5f);
         glColor3f(0.2f, 0.6f, 0.4f);
         glutSolidCube(1.0f);
     glPopMatrix();
-    renderizarTextoHUD(-0.14f, -0.28f, "2. SELECTION SORT", GLUT_BITMAP_HELVETICA_12);
+    renderizarTextoHUD(-0.14f, -0.12f, "2. SELECTION SORT", GLUT_BITMAP_HELVETICA_12);
+
+    // Botão 3D 3: Insertion Sort
+    glPushMatrix();
+        glTranslatef(0.0f, -1.6f, 0.0f);
+        glScalef(4.0f, 0.7f, 0.5f);
+        glColor3f(0.6f, 0.3f, 0.7f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    renderizarTextoHUD(-0.13f, -0.42f, "3. INSERTION SORT", GLUT_BITMAP_HELVETICA_12);
     
-    renderizarTextoHUD(-0.25f, -0.7f, "[Clique com o mouse para selecionar]", GLUT_BITMAP_HELVETICA_12);
+    renderizarTextoHUD(-0.25f, -0.85f, "[Clique com o Mouse para selecionar]", GLUT_BITMAP_HELVETICA_12);
 }
 
-// Renderiza a simulação dos blocos quando um algoritmo está rodando
 void desenharRepresentacao() {
-    // Textos informativos da tela
     glColor3f(1.0f, 1.0f, 1.0f);
-    if (estado_atual == ESTADO_BUBBLE) renderizarTextoHUD(-0.95f, 0.88f, "Algoritmo Ativo: BUBBLE SORT", GLUT_BITMAP_HELVETICA_18);
-    else renderizarTextoHUD(-0.95f, 0.88f, "Algoritmo Ativo: SELECTION SORT", GLUT_BITMAP_HELVETICA_18);
+    if (estado_atual == ESTADO_BUBBLE) 
+        renderizarTextoHUD(-0.95f, 0.88f, "Algoritmo Ativo: BUBBLE SORT", GLUT_BITMAP_HELVETICA_18);
+    else if (estado_atual == ESTADO_SELECTION) 
+        renderizarTextoHUD(-0.95f, 0.88f, "Algoritmo Ativo: SELECTION SORT", GLUT_BITMAP_HELVETICA_18);
+    else renderizarTextoHUD(-0.95f, 0.88f, "Algoritmo Ativo: INSERTION SORT", GLUT_BITMAP_HELVETICA_18);
 
-    if (!simulacao_ativa && !concluido) renderizarTextoHUD(-0.95f, 0.80f, "STATUS: PARADO. [Aperte ESPACO para mover / 'M' para Menu]", GLUT_BITMAP_HELVETICA_12);
+    if (!simulacao_ativa && !concluido) 
+        renderizarTextoHUD(-0.95f, 0.80f, "STATUS: PARADO. [Aperte ESPACO para mover / 'M' para Menu]", GLUT_BITMAP_HELVETICA_12);
     else if (concluido) renderizarTextoHUD(-0.95f, 0.80f, "STATUS: ORDENADO! ['M' para retornar ao Menu]", GLUT_BITMAP_HELVETICA_12);
     else renderizarTextoHUD(-0.95f, 0.80f, "STATUS: EM MOVIMENTO... [Aperte ESPACO para pausar]", GLUT_BITMAP_HELVETICA_12);
 
-    // Define a posição estática da Câmera controlada pelas setas do teclado
     gluLookAt(0.0f, camera_angulo_Y, 12.0f,  0.0f, 1.5f, 0.0f,  0.0f, 1.0f, 0.0f);
     glRotatef(camera_angulo_X, 0.0f, 1.0f, 0.0f);
 
-    // Desenha o Cenário (1 para Mesa, 2 para Grid Dinâmico)
     if (cenario_atual == 1) {
-        glColor3f(0.4f, 0.23f, 0.08f); // Madeira da mesa
+        glColor3f(0.4f, 0.23f, 0.08f); // Mesa de Madeira
         glPushMatrix();
             glTranslatef(0.0f, -0.2f, 0.0f);
             glScalef(11.0f, 0.4f, 4.0f);
             glutSolidCube(1.0f);
         glPopMatrix();
     } else {
-        glColor3f(0.1f, 0.5f, 0.8f); // Grid Futurista Neon
+        glColor3f(0.1f, 0.5f, 0.8f); // Grid Abstrato Tron
         glLineWidth(2.0f);
         for(float i = -6.0f; i <= 6.0f; i += 0.5f) {
             glBegin(GL_LINES);
@@ -175,7 +261,7 @@ void desenharRepresentacao() {
         }
     }
 
-    // Desenha os Blocos 3D com texturas procedimentais
+    // Desenha as Barras 3D
     float largura_bloco = 9.0f / TAMANHO_VETOR;
     float inicio_x = -4.5f;
 
@@ -189,10 +275,10 @@ void desenharRepresentacao() {
 
             if (i == comp_1 || i == comp_2) {
                 glDisable(GL_TEXTURE_2D);
-                glColor3f(1.0f, 0.2f, 0.2f); // Ativos em comparação (Vermelho)
+                glColor3f(1.0f, 0.2f, 0.2f); // Em Comparação (Vermelho)
             } else if (ordenado[i]) {
                 glDisable(GL_TEXTURE_2D);
-                glColor3f(0.2f, 0.8f, 0.3f); // Corretamente ordenados (Verde)
+                glColor3f(0.2f, 0.8f, 0.3f); // Ordenado (Verde)
             } else {
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, id_textura);
@@ -222,9 +308,12 @@ void desenharCena() {
 void rotinaTimer(int valor) {
     if (simulacao_ativa && !concluido) {
         if (estado_atual == ESTADO_BUBBLE) {
-            passoBubbleSort(vetor, ordenado, TAMANHO_VETOR, i_bubble, j_bubble, comp_1, comp_2, concluido);
+            passoBubbleSort(); // Continua interno se você quiser
         } else if (estado_atual == ESTADO_SELECTION) {
-            passoSelectionSort(vetor, ordenado, TAMANHO_VETOR, i_select, j_select, min_idx, comp_1, comp_2, concluido);
+            passoSelectionSort(); // Continua interno se você quiser
+        } else if (estado_atual == ESTADO_INSERTION) {
+            // CHAMA O ARQUIVO SEPARADO PASSANDO AS VARIÁVEIS DO MOTOR
+            passoInsertionSort(vetor, ordenado, TAMANHO_VETOR, i_insert, j_insert, chave_insert, pegar_chave, concluido, simulacao_ativa);
         }
     }
     glutPostRedisplay();
@@ -232,20 +321,24 @@ void rotinaTimer(int valor) {
 }
 
 
-// Detecta os cliques nos Botões 3D do Menu Principal
 void gerenciarCliqueMouse(int botao, int estado, int x, int y) {
     if (estado_atual == ESTADO_MENU && botao == GLUT_LEFT_BUTTON && estado == GLUT_DOWN) {
         float mouse_x = (float)x / largura_janela;
         float mouse_y = (float)(altura_janela - y) / altura_janela;
 
-        // Clique no Botão do Bubble Sort
-        if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.52f && mouse_y <= 0.62f) {
+        // Botão 1: Bubble Sort
+        if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.56f && mouse_y <= 0.65f) {
             estado_atual = ESTADO_BUBBLE;
             resetarVetorEDados();
         }
-        // Clique no Botão do Selection Sort
-        else if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.32f && mouse_y <= 0.42f) {
+        // Botão 2: Selection Sort
+        else if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.40f && mouse_y <= 0.49f) {
             estado_atual = ESTADO_SELECTION;
+            resetarVetorEDados();
+        }
+        // Botão 3: Insertion Sort
+        else if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.24f && mouse_y <= 0.33f) {
+            estado_atual = ESTADO_INSERTION;
             resetarVetorEDados();
         }
     }
@@ -253,26 +346,25 @@ void gerenciarCliqueMouse(int botao, int estado, int x, int y) {
 
 void gerenciarTeclado(unsigned char tecla, int x, int y) {
     switch (tecla) {
-        case 32: // ESPAÇO: Liga/Desliga o movimento dos blocos
+        case 32: // ESPAÇO: Controla se o movimento anda ou congela
             if (estado_atual != ESTADO_MENU) simulacao_ativa = !simulacao_ativa;
             break;
-        case 'm': case 'M': // M: Volta para a tela do Menu
+        case 'm': case 'M': // M: Volta pro Menu
             estado_atual = ESTADO_MENU;
             simulacao_ativa = false;
             break;
-        case 'c': case 'C': // C: Troca de Cenário
+        case 'c': case 'C': // C: Troca de cenário
             cenario_atual = (cenario_atual == 1) ? 2 : 1;
             break;
-        case 'r': case 'R': // R: Reseta o algoritmo atual (Mantém parado)
+        case 'r': case 'R': // R: Reseta o modelo (Fica congelado)
             if (estado_atual != ESTADO_MENU) resetarVetorEDados();
             break;
-        case 27: // ESC: Fecha o programa
+        case 27: // ESC: Fecha tudo
             exit(0);
             break;
     }
 }
 
-// Permite movimentar a câmera 3D usando as setas direcionais do teclado
 void gerenciarTeclasEspeciais(int tecla, int x, int y) {
     if (estado_atual != ESTADO_MENU) {
         switch (tecla) {
@@ -302,13 +394,12 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(largura_janela, altura_janela);
-    glutCreateWindow("Modelo de Ordenacao");
+    glutCreateWindow("Modelos de Ordenacao");
 
     glEnable(GL_DEPTH_TEST);
     configurarIluminacao();
     gerarTexturaProcedimental();
 
-    // Associação de Callbacks do GLUT
     glutDisplayFunc(desenharCena);
     glutReshapeFunc(reiniciarJanela);
     glutKeyboardFunc(gerenciarTeclado);
