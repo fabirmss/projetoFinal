@@ -16,7 +16,6 @@ O motor foi desenvolvido em **C++ utilizando OpenGL (FreeGLUT)** e implementa:
 - **Controle Estrito de Animação (FSM):** Os algoritmos iniciam em estado **estático (congelado)** para fins pedagógicos e avançam passo a passo por frame quando comandados.
 - **Pipeline de Iluminação Fixo:** Configuração de luz ambiente e difusa para sombreamento dos blocos tridimensionais.
 - **Texturização Procedimental:** Geração matemática de texturas (xadrez e listras) diretamente na memória de vídeo, eliminando dependências externas de imagens.
-- **Múltiplos Cenários:** Alternância em tempo real entre uma mesa de madeira acadêmica e um grid digital em estilo *Tron*.
 - **Câmera Interativa:** Controle manual de órbita e elevação da câmera ao redor do vetor tridimensional.
 
 ---
