@@ -1,5 +1,4 @@
-
-#include <GL/glut.h>
+#include <GLUT/glut.h>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -9,7 +8,10 @@
 
 #define TAMANHO_VETOR 40
 #define VALOR_MAXIMO 50
-#define VELOCIDADE_MS 20
+
+int velocidade_atual_ms = 40;
+enum TipoVelocidade { LENTO, MEDIO, RAPIDO };
+TipoVelocidade modo_velocidade = MEDIO;
 
 enum EstadoSistema { ESTADO_MENU, ESTADO_BUBBLE, ESTADO_SELECTION, ESTADO_INSERTION };
 EstadoSistema estado_atual = ESTADO_MENU;
@@ -130,7 +132,7 @@ void resetarVetorEDados() {
     i_insert = 1; j_insert = 0; pegar_chave = true;
     comp_1 = -1;  comp_2 = -1;
     concluido = false;
-    simulacao_ativa = false; // Começa sempre estático (parado)
+    simulacao_ativa = false;
 }
 
 void gerarTexturaProcedimental() {
@@ -197,7 +199,6 @@ void desenharMenuPrincipal() {
 
     gluLookAt(0.0f, 0.0f, 8.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    // Botão 3D 1: Bubble Sort
     glPushMatrix();
         glTranslatef(0.0f, 0.8f, 0.0f);
         glScalef(4.0f, 0.7f, 0.5f);
@@ -206,7 +207,6 @@ void desenharMenuPrincipal() {
     glPopMatrix();
     renderizarTextoHUD(-0.11f, 0.17f, "1. BUBBLE SORT", GLUT_BITMAP_HELVETICA_12);
 
-    // Botão 3D 2: Selection Sort
     glPushMatrix();
         glTranslatef(0.0f, -0.4f, 0.0f);
         glScalef(4.0f, 0.7f, 0.5f);
@@ -215,7 +215,6 @@ void desenharMenuPrincipal() {
     glPopMatrix();
     renderizarTextoHUD(-0.14f, -0.12f, "2. SELECTION SORT", GLUT_BITMAP_HELVETICA_12);
 
-    // Botão 3D 3: Insertion Sort
     glPushMatrix();
         glTranslatef(0.0f, -1.6f, 0.0f);
         glScalef(4.0f, 0.7f, 0.5f);
@@ -244,14 +243,14 @@ void desenharRepresentacao() {
     glRotatef(camera_angulo_X, 0.0f, 1.0f, 0.0f);
 
     if (cenario_atual == 1) {
-        glColor3f(0.4f, 0.23f, 0.08f); // Mesa de Madeira
+        glColor3f(0.4f, 0.23f, 0.08f); 
         glPushMatrix();
             glTranslatef(0.0f, -0.2f, 0.0f);
             glScalef(11.0f, 0.4f, 4.0f);
             glutSolidCube(1.0f);
         glPopMatrix();
     } else {
-        glColor3f(0.1f, 0.5f, 0.8f); // Grid Abstrato Tron
+        glColor3f(0.1f, 0.5f, 0.8f); 
         glLineWidth(2.0f);
         for(float i = -6.0f; i <= 6.0f; i += 0.5f) {
             glBegin(GL_LINES);
@@ -261,7 +260,6 @@ void desenharRepresentacao() {
         }
     }
 
-    // Desenha as Barras 3D
     float largura_bloco = 9.0f / TAMANHO_VETOR;
     float inicio_x = -4.5f;
 
@@ -275,10 +273,10 @@ void desenharRepresentacao() {
 
             if (i == comp_1 || i == comp_2) {
                 glDisable(GL_TEXTURE_2D);
-                glColor3f(1.0f, 0.2f, 0.2f); // Em Comparação (Vermelho)
+                glColor3f(1.0f, 0.2f, 0.2f); 
             } else if (ordenado[i]) {
                 glDisable(GL_TEXTURE_2D);
-                glColor3f(0.2f, 0.8f, 0.3f); // Ordenado (Verde)
+                glColor3f(0.2f, 0.8f, 0.3f); 
             } else {
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, id_textura);
@@ -290,6 +288,44 @@ void desenharRepresentacao() {
             glDisable(GL_TEXTURE_2D);
         glPopMatrix();
     }
+
+    glPushMatrix();
+        glTranslatef(4.0f, 4.5f, -1.0f); 
+        glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
+        glRotatef(-20.0f, 0.0f, 1.0f, 0.0f);
+
+        glPushMatrix();
+            glScalef(2.2f, 0.7f, 0.2f);
+            glColor3f(0.15f, 0.15f, 0.18f); 
+            glutSolidCube(1.0f);
+        glPopMatrix();
+
+        glPushMatrix();
+            glTranslatef(0.0f, 0.0f, 0.15f); 
+            glScalef(1.9f, 0.5f, 0.2f);
+            
+            if (modo_velocidade == LENTO) {
+                glColor3f(0.9f, 0.6f, 0.1f);      
+            } else if (modo_velocidade == MEDIO) {
+                glColor3f(0.1f, 0.6f, 0.9f);      
+            } else {
+                glColor3f(0.9f, 0.1f, 0.2f);      
+            }
+            
+            glutSolidCube(1.0f); 
+        glPopMatrix();
+    glPopMatrix();
+
+    renderizarTextoHUD(0.55f, 0.90f, "CONTROLE DE VELOCIDADE", GLUT_BITMAP_HELVETICA_10);
+    
+    if (modo_velocidade == LENTO)
+        renderizarTextoHUD(0.55f, 0.83f, "STATUS: >> LENTO (150ms)", GLUT_BITMAP_HELVETICA_12);
+    else if (modo_velocidade == MEDIO)
+        renderizarTextoHUD(0.55f, 0.83f, "STATUS: >> MEDIO (40ms)", GLUT_BITMAP_HELVETICA_12);
+    else
+        renderizarTextoHUD(0.55f, 0.83f, "STATUS: >> RAPIDO (5ms)", GLUT_BITMAP_HELVETICA_12);
+
+    renderizarTextoHUD(0.55f, 0.77f, "[Clique no Botao Flutuante p/ Alterar]", GLUT_BITMAP_HELVETICA_10);
 }
 
 void desenharCena() {
@@ -308,58 +344,68 @@ void desenharCena() {
 void rotinaTimer(int valor) {
     if (simulacao_ativa && !concluido) {
         if (estado_atual == ESTADO_BUBBLE) {
-            passoBubbleSort(); // Continua interno se você quiser
+            passoBubbleSort(); 
         } else if (estado_atual == ESTADO_SELECTION) {
-            passoSelectionSort(); // Continua interno se você quiser
+            passoSelectionSort(); 
         } else if (estado_atual == ESTADO_INSERTION) {
-            // CHAMA O ARQUIVO SEPARADO PASSANDO AS VARIÁVEIS DO MOTOR
             passoInsertionSort(vetor, ordenado, TAMANHO_VETOR, i_insert, j_insert, chave_insert, pegar_chave, concluido, simulacao_ativa);
         }
     }
     glutPostRedisplay();
-    glutTimerFunc(VELOCIDADE_MS, rotinaTimer, 0);
+    glutTimerFunc(velocidade_atual_ms, rotinaTimer, 0); 
 }
 
-
 void gerenciarCliqueMouse(int botao, int estado, int x, int y) {
-    if (estado_atual == ESTADO_MENU && botao == GLUT_LEFT_BUTTON && estado == GLUT_DOWN) {
-        float mouse_x = (float)x / largura_janela;
-        float mouse_y = (float)(altura_janela - y) / altura_janela;
+    float mouse_x = (float)x / largura_janela;
+    float mouse_y = (float)(altura_janela - y) / altura_janela;
 
-        // Botão 1: Bubble Sort
+    if (estado_atual == ESTADO_MENU && botao == GLUT_LEFT_BUTTON && estado == GLUT_DOWN) {
         if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.56f && mouse_y <= 0.65f) {
             estado_atual = ESTADO_BUBBLE;
             resetarVetorEDados();
         }
-        // Botão 2: Selection Sort
         else if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.40f && mouse_y <= 0.49f) {
             estado_atual = ESTADO_SELECTION;
             resetarVetorEDados();
         }
-        // Botão 3: Insertion Sort
         else if (mouse_x >= 0.3f && mouse_x <= 0.7f && mouse_y >= 0.24f && mouse_y <= 0.33f) {
             estado_atual = ESTADO_INSERTION;
             resetarVetorEDados();
+        }
+    } 
+    else if (estado_atual != ESTADO_MENU && botao == GLUT_LEFT_BUTTON && estado == GLUT_DOWN) {
+        if (mouse_x >= 0.60f && mouse_x <= 0.98f && mouse_y >= 0.70f && mouse_y <= 0.96f) {
+            if (modo_velocidade == LENTO) {
+                modo_velocidade = MEDIO;
+                velocidade_atual_ms = 40; 
+            } else if (modo_velocidade == MEDIO) {
+                modo_velocidade = RAPIDO;
+                velocidade_atual_ms = 5;  
+            } else {
+                modo_velocidade = LENTO;
+                velocidade_atual_ms = 150; 
+            }
+            glutPostRedisplay(); 
         }
     }
 }
 
 void gerenciarTeclado(unsigned char tecla, int x, int y) {
     switch (tecla) {
-        case 32: // ESPAÇO: Controla se o movimento anda ou congela
+        case 32: 
             if (estado_atual != ESTADO_MENU) simulacao_ativa = !simulacao_ativa;
             break;
-        case 'm': case 'M': // M: Volta pro Menu
+        case 'm': case 'M': 
             estado_atual = ESTADO_MENU;
             simulacao_ativa = false;
             break;
-        case 'c': case 'C': // C: Troca de cenário
+        case 'c': case 'C': 
             cenario_atual = (cenario_atual == 1) ? 2 : 1;
             break;
-        case 'r': case 'R': // R: Reseta o modelo (Fica congelado)
+        case 'r': case 'R': 
             if (estado_atual != ESTADO_MENU) resetarVetorEDados();
             break;
-        case 27: // ESC: Fecha tudo
+        case 27: 
             exit(0);
             break;
     }
@@ -405,7 +451,7 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(gerenciarTeclado);
     glutSpecialFunc(gerenciarTeclasEspeciais);
     glutMouseFunc(gerenciarCliqueMouse);
-    glutTimerFunc(VELOCIDADE_MS, rotinaTimer, 0);
+    glutTimerFunc(velocidade_atual_ms, rotinaTimer, 0);
 
     glClearColor(0.06f, 0.07f, 0.1f, 1.0f);
 
