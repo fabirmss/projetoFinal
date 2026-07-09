@@ -2,9 +2,9 @@
 
 ## Contexto Acadêmico
 
-Este sistema faz parte do **Projeto Interdisciplinar** que promove a integração curricular entre as disciplinas de **Programação Orientada a Objetos (POO)** e **Computação Gráfica (CG)** do Departamento de Ciência da Computação da **Universidade Federal de Rondônia (UNIR)**, sob a orientação do Prof. Dr. Lucas Marques da Cunha.
+Este sistema faz parte do **Projeto Interdisciplinar** que promove a integração curricular entre as disciplinas de **Programação Orientada a Objetos (POO)** e **Computação Gráfica (CG)** do Departamento de Ciência da Computação da **Universidade Federal de Rondônia (UNIR)**, sob a orientação do **Prof. Dr. Lucas Marques da Cunha**.
 
-O objetivo do ecossistema é simular uma arquitetura multicamadas através da separação estrita de responsabilidades: uma camada de controle lógico e um motor gráfico nativo de baixo nível focado em pipeline de renderização avançado.
+O objetivo do ecossistema é simular uma arquitetura multicamadas através da separação estrita de responsabilidades: uma camada de controle lógico e um motor gráfico nativo de baixo nível focado em visualização tridimensional e no ensino de algoritmos de ordenação.
 
 ---
 
@@ -12,26 +12,86 @@ O objetivo do ecossistema é simular uma arquitetura multicamadas através da se
 
 O motor foi desenvolvido em **C++ utilizando OpenGL (FreeGLUT)** e implementa:
 
-- **Menu 3D Interativo:** Tela de inicialização com botões tridimensionais selecionáveis via clique do mouse (mapeamento de coordenadas de tela para o espaço 3D).
-- **Controle Estrito de Animação (FSM):** Os algoritmos iniciam em estado **estático (congelado)** para fins pedagógicos e avançam passo a passo por frame quando comandados.
-- **Pipeline de Iluminação Fixo:** Configuração de luz ambiente e difusa para sombreamento dos blocos tridimensionais.
-- **Texturização Procedimental:** Geração matemática de texturas (xadrez e listras) diretamente na memória de vídeo, eliminando dependências externas de imagens.
-- **Múltiplos Cenários:** Alternância em tempo real entre uma mesa de madeira acadêmica e um grid digital em estilo *Tron*.
-- **Câmera Interativa:** Controle manual de órbita e elevação da câmera ao redor do vetor tridimensional.
+- **Menu 3D Interativo:** Tela inicial com seleção dos algoritmos através de botões tridimensionais clicáveis.
+- **Visualização Tridimensional dos Algoritmos:** Representação gráfica da execução dos algoritmos de ordenação em tempo real.
+- **Controle Estrito de Animação (FSM):** A execução permanece pausada até que o usuário inicie a simulação.
+- **Pipeline de Iluminação:** Utilização de iluminação ambiente e difusa para melhor percepção dos elementos 3D.
+- **Texturização Procedimental:** Geração de texturas sem dependência de arquivos externos.
+- **Múltiplos Cenários:** Alternância entre diferentes ambientes de visualização.
+- **Controle de Velocidade:** Permite alternar entre três velocidades de execução da simulação.
+- **Câmera Interativa:** Movimentação da câmera para diferentes ângulos de observação.
+- **Execução Passo a Passo** dos algoritmos:
+  - Bubble Sort
+  - Selection Sort
+  - Insertion Sort
+
+---
+
+# Tecnologias Utilizadas
+
+- C++
+- OpenGL
+- FreeGLUT
+- GLUT
+- g++
+- Homebrew (macOS)
 
 ---
 
 # Estrutura do Projeto
 
-Visando facilitar a compilação e execução nos computadores do laboratório, o motor gráfico e os algoritmos de ordenação foram consolidados em um único módulo integrado.
+O projeto está organizado da seguinte forma:
 
-### Arquivo principal
+```text
+projetoFinal/
+│
+├── motor.cpp
+├── bubble.cpp
+├── selection.cpp
+├── insertion.cpp
+├── algoritmos.h
+└── README.md
+```
 
-- **`motor.cpp`**
-  - Interface gráfica 3D.
-  - Motor de renderização.
-  - Algoritmos de ordenação (Bubble Sort e Selection Sort).
-  - Controle de animações e interação do usuário.
+### Descrição dos Arquivos
+
+#### `motor.cpp`
+
+- Motor gráfico 3D.
+- Interface do usuário.
+- Renderização.
+- Controle da câmera.
+- Controle dos cenários.
+- Entrada do teclado e mouse.
+- Gerenciamento da execução dos algoritmos.
+
+#### `bubble.cpp`
+
+Implementação do algoritmo **Bubble Sort** em execução passo a passo.
+
+#### `selection.cpp`
+
+Implementação do algoritmo **Selection Sort** em execução passo a passo.
+
+#### `insertion.cpp`
+
+Implementação do algoritmo **Insertion Sort** em execução passo a passo.
+
+#### `algoritmos.h`
+
+Arquivo de cabeçalho contendo as assinaturas das funções utilizadas pelos algoritmos.
+
+---
+
+# Algoritmos Implementados
+
+Atualmente o projeto possui três algoritmos de ordenação:
+
+- Bubble Sort
+- Selection Sort
+- Insertion Sort
+
+Cada algoritmo pode ser selecionado através do menu principal e executado de forma visual, permitindo acompanhar cada etapa da ordenação.
 
 ---
 
@@ -40,27 +100,47 @@ Visando facilitar a compilação e execução nos computadores do laboratório, 
 ## Menu Principal
 
 - **Clique esquerdo do mouse**
-  - Seleciona o algoritmo de ordenação (Bubble Sort ou Selection Sort).
+  - Seleciona o algoritmo desejado:
+    - Bubble Sort
+    - Selection Sort
+    - Insertion Sort
 
 ## Tela de Visualização
 
-- **Barra de Espaço**
-  - Inicia/Pausa a animação da ordenação.
+### Barra de Espaço
 
-- **Setas direcionais (⬅️ ➡️ ⬆️ ⬇️)**
-  - Movimentam a câmera.
+Inicia ou pausa a simulação.
 
-- **Tecla C**
-  - Alterna o cenário (Mesa de Madeira ↔ Grid Neon).
+### Setas Direcionais
 
-- **Tecla R**
-  - Gera um novo vetor aleatório e retorna ao estado parado.
+- ⬅️ Rotaciona a câmera para a esquerda.
+- ➡️ Rotaciona a câmera para a direita.
+- ⬆️ Eleva a câmera.
+- ⬇️ Abaixa a câmera.
 
-- **Tecla M**
-  - Retorna ao Menu Principal.
+### Tecla C
 
-- **Tecla ESC**
-  - Fecha a aplicação.
+Alterna entre os cenários disponíveis.
+
+### Tecla R
+
+Gera um novo conjunto de valores aleatórios e reinicia a simulação.
+
+### Tecla M
+
+Retorna ao Menu Principal.
+
+### Clique no botão de velocidade
+
+Alterna entre:
+
+- Lento
+- Médio
+- Rápido
+
+### Tecla ESC
+
+Fecha a aplicação.
 
 ---
 
@@ -77,7 +157,11 @@ sudo apt-get install freeglut3-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-
 cd ~/OpenGL_Project/projetoFinal
 
 # 3. Compilar
-g++ -o motor motor.cpp -lglut -lGL -lGLU
+g++ motor.cpp bubble.cpp selection.cpp insertion.cpp \
+-o motor \
+-lglut \
+-lGL \
+-lGLU
 
 # 4. Executar
 ./motor
@@ -87,19 +171,22 @@ g++ -o motor motor.cpp -lglut -lGL -lGLU
 
 # Como Compilar e Executar (macOS)
 
-🍏 **Ambiente de Desenvolvimento do Grupo**
+🍏 **Ambiente de Desenvolvimento**
 
-Certifique-se de possuir o gerenciador de pacotes **Homebrew** instalado no macOS para gerenciar as dependências do projeto.
+Certifique-se de possuir o **Homebrew** instalado.
 
 ```bash
-# 1. Instalar o FreeGLUT via Homebrew
+# 1. Instalar o FreeGLUT
 brew install freeglut
 
 # 2. Navegar até a pasta do projeto
-cd "/CG-TRABALHO FINAL/projetoFinal"
+cd "/CAMINHO/DO/SEU/projetoFinal"
+
+# Exemplo:
+# cd "/Users/SEU_USUARIO/Documents/projetoFinal"
 
 # 3. Compilar
-g++ motor.cpp \
+g++ motor.cpp bubble.cpp selection.cpp insertion.cpp \
 -I/opt/homebrew/include \
 -L/opt/homebrew/lib \
 -framework OpenGL \
@@ -110,4 +197,49 @@ g++ motor.cpp \
 ./motor
 ```
 
-> **Observação:** Em Macs com processador Intel, o Homebrew normalmente é instalado em `/usr/local`, enquanto nos Macs com Apple Silicon (M1, M2, M3 e posteriores) o caminho padrão é `/opt/homebrew`. Caso necessário, ajuste os parâmetros `-I` e `-L` conforme a instalação do Homebrew.
+> **Observação:** Em Macs Intel o Homebrew normalmente é instalado em `/usr/local`, enquanto em Macs Apple Silicon (M1, M2, M3 e posteriores) o caminho padrão é `/opt/homebrew`. Caso necessário, ajuste os parâmetros `-I` e `-L`.
+
+---
+
+# Como Utilizar
+
+1. Execute a aplicação.
+2. No menu principal, escolha um algoritmo.
+3. Pressione **Barra de Espaço** para iniciar a animação.
+4. Utilize as **setas direcionais** para movimentar a câmera.
+5. Utilize a tecla **C** para alterar o cenário.
+6. Utilize o botão de velocidade para alternar entre os modos **Lento**, **Médio** e **Rápido**.
+7. Pressione **R** para gerar um novo conjunto de dados.
+8. Pressione **M** para retornar ao menu principal.
+9. Pressione **ESC** para encerrar o programa.
+
+---
+
+# Demonstração da Ferramenta
+
+## Vídeo de Demonstração
+
+> **Link do vídeo:**  
+> **https://_______________________________**
+
+---
+
+# Repositório do Projeto
+
+> **Link do GitHub:**  
+> **https://_______________________________**
+
+---
+
+# Autores
+
+- _Fabiana Ramos____________
+- _Gabriel Barros__________
+- _Giulia Correa____________
+- _Higor______
+
+---
+
+# Licença
+
+Este projeto foi desenvolvido para fins acadêmicos como parte do Projeto Interdisciplinar do Curso de Ciência da Computação da **Universidade Federal de Rondônia (UNIR)**.
