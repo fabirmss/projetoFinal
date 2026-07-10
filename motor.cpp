@@ -6,7 +6,7 @@
 #include <algorithm> 
 #include <thread>
 #include "algoritmos.h"
-#include "MotorOrdenacao.h"
+#include "model_MotorOrdenacao.h"
 
 #define TAMANHO_VETOR 40
 #define VALOR_MAXIMO 50
@@ -41,7 +41,6 @@ int altura_janela = 768;
 GLubyte imagem_textura[TEXTURA_ALTURA][TEXTURA_LARGURA][4];
 GLuint id_textura;
 
-// Variavel para controlar a Thread do Ciclo Gráfico
 std::thread thread_glut;
 bool glut_inicializado = false;
 
@@ -254,7 +253,7 @@ void reiniciarJanela(int largura, int altura) {
     gluPerspective(45.0, (GLdouble)largura / (GLdouble)altura, 1.0, 30.0); glMatrixMode(GL_MODELVIEW);
 }
 
-void loopGraficoNativo() {
+void rodarCicloJanelaNativa() {
     int argc = 1;
     char* argv[] = {(char*)"motor"};
     
@@ -278,39 +277,45 @@ void loopGraficoNativo() {
     glutMainLoop();
 }
 
-// --- IMPLEMENTAÇÕES DOS MÉTODOS NATIVOS DO CONTRATO JNI ---
 
-JNIEXPORT void JNICALL Java_controller_OrdenacaoController_inicializarMotorNativo
-  (JNIEnv *env, jobject obj, jintArray vetorJava, jstring algoritmoJava) {
-    
-    jsize tam = env->GetArrayLength(vetorJava);
-    jint* elementos = env->GetIntArrayElements(vetorJava, nullptr);
-    
-    for (int i = 0; i < TAMANHO_VETOR && i < tam; i++) {
-        vetor[i] = elementos[i];
-        ordenado[i] = false;
-    }
-    env->ReleaseIntArrayElements(vetorJava, elementos, JNI_ABORT);
-    
-    const char* algoStr = env->GetStringUTFChars(algoritmoJava, nullptr);
-    std::string algoritmo(algoStr);
-    
-    resetarVetorEDados();
-    if (algoritmo == "Bubble Sort") estado_atual = ESTADO_BUBBLE;
-    else if (algoritmo == "Selection Sort") estado_atual = ESTADO_SELECTION;
-    else if (algoritmo == "Insertion Sort") estado_atual = ESTADO_INSERTION;
-    
-    env->ReleaseStringUTFChars(algoritmoJava, algoStr);
-    simulacao_ativa = true;
-
+JNIEXPORT void JNICALL Java_model_MotorOrdenacao_init
+  (JNIEnv *env, jobject obj) {
     if (!glut_inicializado) {
         glut_inicializado = true;
-        thread_glut = std::thread(loopGraficoNativo);
-        thread_glut.detach();
+        thread_glut = std::thread(rodarCicloJanelaNativa);
+        thread_glut.detach(); 
     }
 }
 
-JNIEXPORT void JNICALL Java_controller_OrdenacaoController_encerrarMotorNativo
+JNIEXPORT void JNICALL Java_model_MotorOrdenacao_ordenar
+  (JNIEnv *env, jobject obj, jintArray vetorJava, jstring algoritmoJava) {
+    
+    jsize tamanho = env->GetArrayLength(vetorJava);
+    jint* dados = env->GetIntArrayElements(vetorJava, nullptr);
+    
+    for (int i = 0; i < TAMANHO_VETOR && i < tamanho; i++) {
+        vetor[i] = dados[i];
+        ordenado[i] = false;
+    }
+    env->ReleaseIntArrayElements(vetorJava, dados, JNI_ABORT);
+    
+    const char* algoritmoStr = env->GetStringUTFChars(algoritmoJava, nullptr);
+    std::string algo(algoritmoStr);
+    
+    resetarVetorEDados();
+    if (algo == "Bubble Sort") {
+        estado_atual = ESTADO_BUBBLE;
+    } else if (algo == "Selection Sort") {
+        estado_atual = ESTADO_SELECTION;
+    } else if (algo == "Insertion Sort") {
+        estado_atual = ESTADO_INSERTION;
+    }
+    
+    env->ReleaseStringUTFChars(algoritmoJava, algoritmoStr);
+    simulacao_ativa = true;
+}
+
+JNIEXPORT void JNICALL Java_model_MotorOrdenacao_cleanup
   (JNIEnv *env, jobject obj) {
     exit(0);
 }
