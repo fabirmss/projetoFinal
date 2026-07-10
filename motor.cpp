@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm> 
+#include <string> // Adicionado para manipulação das etiquetas de texto
 #include "algoritmos.h"
 
 #define TAMANHO_VETOR 40
@@ -39,7 +40,6 @@ int altura_janela = 768;
 #define TEXTURA_ALTURA 64
 GLubyte imagem_textura[TEXTURA_ALTURA][TEXTURA_LARGURA][4];
 GLuint id_textura;
-
 
 void passoBubbleSort() {
     if (i_bubble < TAMANHO_VETOR - 1) {
@@ -169,6 +169,7 @@ void configurarIluminacao() {
     glLightfv(GL_LIGHT0, GL_DIFFUSE, luz_difusa);
 }
 
+// Renderiza texto fixo na tela (Interface/HUD)
 void renderizarTextoHUD(float x, float y, const char* texto, void* fonte) {
     glDisable(GL_LIGHTING);
     glMatrixMode(GL_PROJECTION);
@@ -189,6 +190,17 @@ void renderizarTextoHUD(float x, float y, const char* texto, void* fonte) {
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
+    glEnable(GL_LIGHTING);
+}
+
+// NOVA FUNÇÃO: Renderiza texto acompanhando as coordenadas 3D do mundo
+void renderizarTexto3D(float x, float y, float z, const char* texto, void* fonte) {
+    glDisable(GL_LIGHTING);
+    glRasterPos3f(x, y, z);
+    while (*texto) {
+        glutBitmapCharacter(fonte, *texto);
+        texto++;
+    }
     glEnable(GL_LIGHTING);
 }
 
@@ -287,8 +299,47 @@ void desenharRepresentacao() {
             glutSolidCube(1.0f);
             glDisable(GL_TEXTURE_2D);
         glPopMatrix();
+
+        // --- INSERÇÃO DE ELEMENTOS GRÁFICOS DIDÁTICOS (TEXTO MUNDO 3D) ---
+        
+        // 1. Exibir o VALOR Numérico acima da barra correspondente
+        glColor3f(1.0f, 1.0f, 1.0f); // Texto padrão em branco
+        char str_valor[8];
+        snprintf(str_valor, sizeof(str_valor), "%d", vetor[i]);
+        // Renderiza ligeiramente deslocado no eixo X para centralizar e acima da barra (escala_altura + 0.1f)
+        renderizarTexto3D(x_pos - (largura_bloco * 0.25f), escala_altura + 0.1f, 0.1f, str_valor, GLUT_BITMAP_HELVETICA_10);
+
+        // 2. Exibir o ÍNDICE da posição do vetor abaixo da barra
+        char str_idx[8];
+        snprintf(str_idx, sizeof(str_idx), "%d", i);
+        renderizarTexto3D(x_pos - (largura_bloco * 0.2f), -0.25f, 0.1f, str_idx, GLUT_BITMAP_HELVETICA_10);
+
+        // 3. Mapeamento das Variáveis de Controle e Iteradores Dinâmicos
+        std::string etiquetas = "";
+        
+        if (estado_atual == ESTADO_BUBBLE) {
+            if (i == j_bubble) etiquetas += "j ";
+            if (i == j_bubble + 1) etiquetas += "j+1 ";
+            if (i == TAMANHO_VETOR - i_bubble - 1) etiquetas += "[fim]";
+        } 
+        else if (estado_atual == ESTADO_SELECTION) {
+            if (i == i_select) etiquetas += "i ";
+            if (i == j_select) etiquetas += "j ";
+            if (i == min_idx) etiquetas += "min ";
+        } 
+        else if (estado_atual == ESTADO_INSERTION) {
+            if (i == i_insert) etiquetas += "i ";
+            if (i == j_insert) etiquetas += "j ";
+        }
+
+        // Se houver alguma variável apontando para a barra atual, renderiza destacado em amarelo
+        if (!etiquetas.empty()) {
+            glColor3f(1.0f, 1.0f, 0.0f); // Amarelo vibrante para destaque analítico
+            renderizarTexto3D(x_pos - (largura_bloco * 0.4f), escala_altura + 0.4f, 0.1f, etiquetas.c_str(), GLUT_BITMAP_HELVETICA_12);
+        }
     }
 
+    // Caixa indicadora de velocidade HUD
     glPushMatrix();
         glTranslatef(4.0f, 4.5f, -1.0f); 
         glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
