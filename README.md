@@ -224,11 +224,21 @@ g++ motor.cpp bubble.cpp selection.cpp insertion.cpp \
 
 ---
 
-# Repositório do Projeto
+# Clonar os Repositórios
 
-> **Link do GitHub:**  
+Para executar o Projeto Interdisciplinar completo, é necessário clonar os dois repositórios:
 
-> **https://github.com/fabirmss/projetoFinal**
+## Computação Gráfica (CG)
+
+```bash
+git clone https://github.com/fabirmss/projetoFinal.git
+```
+
+## Programação Orientada a Objetos (POO)
+
+Repositório do projeto desenvolvido na disciplina de Programação Orientada a Objetos:
+
+https://github.com/samarasilvaramos34-lgtm/ProjetoFinalOrdenacaoAlgoritmo-POO
 
 ---
 
@@ -237,7 +247,6 @@ g++ motor.cpp bubble.cpp selection.cpp insertion.cpp \
 - _Fabiana Ramos____________
 - _Gabriel Barros__________
 - _Giulia Correa____________
-- _Higor______
 
 ---
 
