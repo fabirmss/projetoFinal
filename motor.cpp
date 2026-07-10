@@ -1,4 +1,8 @@
-#include <GLUT/glut.h>
+#ifdef __APPLE__
+    #include <GLUT/glut.h>
+#else
+    #include <GL/freeglut.h>
+#endif
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -312,7 +316,7 @@ JNIEXPORT void JNICALL Java_model_MotorOrdenacao_ordenar
     }
     
     env->ReleaseStringUTFChars(algoritmoJava, algoritmoStr);
-    simulacao_ativa = true;
+    simulacao_ativa = true; 
 }
 
 JNIEXPORT void JNICALL Java_model_MotorOrdenacao_cleanup
